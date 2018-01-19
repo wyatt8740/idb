@@ -1,0 +1,147 @@
+diff --git a/tools/iproxy.c b/tools/iproxy.c
+index 21dec51..9e8afa1 100644
+--- a/tools/iproxy.c
++++ b/tools/iproxy.c
+@@ -62,7 +62,9 @@ static void *run_stoc_loop(void *arg)
+ 	int sent;
+ 	char buffer[131072];
+ 
++	/* wyatt - quiet
+ 	printf("%s: fd = %d\n", __func__, cdata->fd);
++	*/
+ 
+ 	while (!cdata->stop_stoc && cdata->fd > 0 && cdata->sfd > 0) {
+ 		recv_len = socket_receive_timeout(cdata->sfd, buffer, sizeof(buffer), 0, 5000);
+@@ -71,7 +73,9 @@ static void *run_stoc_loop(void *arg)
+ 				// try again
+ 				continue;
+ 			} else {
++				/* wyatt - quiet
+ 				fprintf(stderr, "recv failed: %s\n", strerror(-recv_len));
++				*/
+ 				break;
+ 			}
+ 		} else {
+@@ -107,9 +111,9 @@ static void *run_ctos_loop(void *arg)
+ #else
+ 	pthread_t stoc;
+ #endif
+-
++	/* wyatt - quiet
+ 	printf("%s: fd = %d\n", __func__, cdata->fd);
+-
++	*/
+ 	cdata->stop_stoc = 0;
+ #ifdef WIN32
+ 	stoc = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)run_stoc_loop, cdata, 0, NULL);
+@@ -124,7 +128,9 @@ static void *run_ctos_loop(void *arg)
+ 				// try again
+ 				continue;
+ 			} else {
++				/* wyatt - quiet
+ 				fprintf(stderr, "recv failed: %s\n", strerror(-recv_len));
++				*/
+ 				break;
+ 			}
+ 		} else {
+@@ -132,10 +138,14 @@ static void *run_ctos_loop(void *arg)
+ 			sent = socket_send(cdata->sfd, buffer, recv_len);
+ 			if (sent < recv_len) {
+ 				if (sent <= 0) {
++					/* wyatt - quiet
+ 					fprintf(stderr, "send failed: %s\n", strerror(errno));
++					*/
+ 					break;
+ 				} else {
++					/* wyatt - quiet
+ 					fprintf(stderr, "only sent %d from %d bytes\n", sent, recv_len);
++					*/
+ 				}
+ 			}
+ 		}
+@@ -167,14 +177,18 @@ static void *acceptor_thread(void *arg)
+ 	int count;
+ 
+ 	if (!arg) {
++		/* wyatt - quiet
+ 		fprintf(stderr, "invalid client_data provided!\n");
++		*/
+ 		return NULL;
+ 	}
+ 
+ 	cdata = (struct client_data*)arg;
+ 
+ 	if ((count = usbmuxd_get_device_list(&dev_list)) < 0) {
++		/* wyatt - quiet
+ 		printf("Connecting to usbmuxd failed, terminating.\n");
++		*/
+ 		free(dev_list);
+ 		if (cdata->fd > 0) {
+ 			socket_close(cdata->fd);
+@@ -183,10 +197,14 @@ static void *acceptor_thread(void *arg)
+ 		return NULL;
+ 	}
+ 
++	/* wyatt - quiet
+ 	fprintf(stdout, "Number of available devices == %d\n", count);
++	*/
+ 
+ 	if (dev_list == NULL || dev_list[0].handle == 0) {
++		/* wyatt - quiet
+ 		printf("No connected device found, terminating.\n");
++		*/
+ 		free(dev_list);
+ 		if (cdata->fd > 0) {
+ 			socket_close(cdata->fd);
+@@ -209,7 +227,9 @@ static void *acceptor_thread(void *arg)
+ 	}
+ 
+ 	if (dev == NULL || dev->handle == 0) {
++		/* wyatt - quiet
+ 		printf("No connected/matching device found, disconnecting client.\n");
++		*/
+ 		free(dev_list);
+ 		if (cdata->fd > 0) {
+ 			socket_close(cdata->fd);
+@@ -218,12 +238,16 @@ static void *acceptor_thread(void *arg)
+ 		return NULL;
+ 	}
+ 
++	/* wyatt - quiet
+ 	fprintf(stdout, "Requesting connecion to device handle == %d (serial: %s), port %d\n", dev->handle, dev->udid, device_port);
++	*/
+ 
+ 	cdata->sfd = usbmuxd_connect(dev->handle, device_port);
+ 	free(dev_list);
+ 	if (cdata->sfd < 0) {
++		/* wyatt - quiet
+ 		fprintf(stderr, "Error connecting to device!\n");
++		*/
+ 	} else {
+ 		cdata->stop_ctos = 0;
+ 
+@@ -276,7 +300,9 @@ int main(int argc, char **argv)
+ 	// first create the listening socket endpoint waiting for connections.
+ 	mysock = socket_create(listen_port);
+ 	if (mysock < 0) {
++		/* wyatt - quiet
+ 		fprintf(stderr, "Error creating socket: %s\n", strerror(errno));
++		*/
+ 		return -errno;
+ 	} else {
+ #ifdef WIN32
+@@ -287,10 +313,14 @@ int main(int argc, char **argv)
+ 		struct client_data *cdata;
+ 		int c_sock;
+ 		while (1) {
++			/* wyatt - quiet
+ 			printf("waiting for connection\n");
++			*/
+ 			c_sock = socket_accept(mysock, listen_port);
+ 			if (c_sock) {
++				/* wyatt - quiet
+ 				printf("accepted connection, fd = %d\n", c_sock);
++				*/
+ 				cdata = (struct client_data*)malloc(sizeof(struct client_data));
+ 				if (!cdata) {
+ 					socket_close(c_sock);
