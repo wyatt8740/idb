@@ -1,8 +1,8 @@
 #! /bin/sh
 
 # Defines at top of file for easy editing
-LOCALPORT=2222 # port on computer this runs on
-REMOTEPORT=50022 # port sshd runs on on the device
+LOCALPORT=2222 # port on computer this runs on.
+REMOTEPORT=22 # port sshd runs on on the device. Default is usually 22.
 USER="mobile" # user on iDevice
 IPADDR="127.0.0.1" # don't change unless you plan to use this for wireless ssh.
 
