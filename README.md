@@ -10,8 +10,27 @@ the port you have `sshd` listening on on your iDevice at the bare minimum.
 
 `idb` is a script that wraps `ssh` and `scp` to emulate some of the most
 often-used functionality encompassed by Android's `adb` (Android Debug Bridge).
+It does this over a USB cable using the 'iproxy' program from
+[libusbmuxd](https://github.com/libimobiledevice/libusbmuxd.git), which is
+located in the 'tools/' subdirectory of its repository.
 
-It *should* work with most of the common Unix/Linux shells.
+`iproxy` relays TCP connections over a USB cable, allowing for ssh-over-USB,
+and with that `scp` for file transfers over USB. This is extremely useful both
+for higher transfer speeds vs. wireless, and for phones with spotty wireless
+capabilities following some form of damage.
+
+It *should* work with most of the common Unix/Linux shells, since it targets
+bourne shell and (to my knowledge) complies entirely with the POSIX standard.
+
+There are several variables defined inside the script (such as the user to
+log in as, the port `sshd` is listening on on the iDevice, and what port is
+desired to bind it to on the host machine).
+
+Optionally, to remove the requirement to enter a password with every push/pull/
+shell command, one may use key authentication to log in. See the documentation
+in the script itself for details.
+
+#### History
 
 As an Android developer with an old jailbroken iPhone 4S I toy with
 occasionally, I was getting annoyed with typing in `ssh`/`scp` commands
