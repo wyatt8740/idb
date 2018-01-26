@@ -5,6 +5,7 @@ LOCALPORT=2222 # port on computer this runs on.
 REMOTEPORT=22 # port sshd runs on on the device. Default is usually 22.
 USER="mobile" # user on iDevice
 IPADDR="127.0.0.1" # don't change unless you plan to use this for wireless ssh.
+IPA_INSTALL_PROG="ipainstaller" # Program on the iDevice to install IPA's with
 
 #Documentation follows. Script is at end of documentation.
 ## iOS Debug Bridge"
@@ -13,18 +14,22 @@ IPADDR="127.0.0.1" # don't change unless you plan to use this for wireless ssh.
 # Supports only one iDevice plugged in at a time as of now.
 #
 ### Usage:
-# idb push /path/on/computer/filename /path/on/idevice/[filename]
-#     Copies a file from the computer to the iDevice.
-# idb pull /path/on/idevice/filename /path/on/computer/[filename]
-#     Copies a file from the iDevice to the computer.
+# idb push [target] [destination]
+#     Copies a targeted file on the computer to a destination on the iDevice.
+# idb pull [target] [destination]
+#     Copies a targeted file from the iDevice to a destination on the computer.
 # idb shell
 #     Starts a remote shell on the iDevice.
 # idb shell [command]
 #     Starts a remote shell on the iDevice, runs the given command, and exits.
+# idb install [target]
+#     Installs the indicated target IPA on the iDevice using `ipainstaller`.
+#     Will need modification to work with other CLI IPA installer programs
+#     (which need to be installed on the iDevice itself via Cydia or similar).
 # idb devices
 #     Lists the UDID's of all connected devices. Part of preliminary
 #     (incomplete but planned) support for multi-device capability.
-#	idb list
+# idb list
 #     Synonym for `idb devices`.
 # idb help
 #     Show this usage information.
@@ -96,18 +101,45 @@ IPADDR="127.0.0.1" # don't change unless you plan to use this for wireless ssh.
 IPROXYPID="" # placeholder
 
 startRelay() {
-	# hide iproxy output. Look here if you can't make it work and remove the
-	# pipe.
-	iproxy-quiet "$LOCALPORT" "$REMOTEPORT" > /dev/null 2>&1 &
-	IPROXYPID="$!"
+  # hide iproxy output. Look here if you can't make it work and remove the
+  # pipe.
+  iproxy-quiet "$LOCALPORT" "$REMOTEPORT" > /dev/null 2>&1 &
+  IPROXYPID="$!"
 }
 
 listDevices() {
-	# preliminary work to support multiple iDevices, untested because I only own
-	# one iDevice. Uses "idevice_id" from libimobiledevice tools at
-	# https://github.com/libimobiledevice/libimobiledevice.git
-	echo "Listing all iDevice UDID's."
-	idevice_id -l
+  # preliminary work to support multiple iDevices, untested because I only own
+  # one iDevice. Uses "idevice_id" from libimobiledevice tools at
+  # https://github.com/libimobiledevice/libimobiledevice.git
+  echo "Listing all iDevice UDID's."
+  idevice_id -l
+}
+
+push() {
+  scp -P"$LOCALPORT" "$1" "$USER""@""$IPADDR"":""$2"
+}
+
+pull() {
+  scp -P"$LOCALPORT" "$USER""@""$IPADDR"":""$1" "$2"
+}
+
+shell() {
+  if [ "$#" -eq 0 ]; then # if no command is specified, start a shell
+    ssh -p"$LOCALPORT" "$USER""@""$IPADDR"
+  else # run the command on the remote device
+    ssh -p"$LOCALPORT" "$USER""@""$IPADDR" "$@"
+  fi
+}
+
+install() {
+  FILENAME=`basename "$1"`
+  echo "Pushing ""$1"" to the iDevice..."
+  push "$1" "/private/var/""$USER""/""$FILENAME"
+  echo "Installing ""$FILENAME"" using ""$IPA_INSTALL_PROG""... Please wait."
+  shell "$IPA_INSTALL_PROG" "/private/var/""$USER""/""$FILENAME"
+  echo "Install program finished, deleting the IPA from the iDevice..."
+  shell rm "/private/var/""$USER""/""$FILENAME"
+  echo "Done."
 }
 
 usageHelp() {
@@ -136,34 +168,43 @@ echo "Some configuration inside this script's source may be required."
 echo "Open this program in a text editor for more documentation."
 }
 
+# push
 if [ "$1" = "push" ]; then
-	startRelay > /dev/null 2>&1
-	scp -P"$LOCALPORT" "$2" "$USER""@""$IPADDR"":""$3"
+  startRelay
+  shift 1 # strip first argument (i.e., "push"), leaving only remaining args
+  push "$1" "$2"
+# pull
 elif [ "$1" = "pull" ]; then
-	startRelay
-	scp -P"$LOCALPORT" "$USER""@""$IPADDR"":""$2" "$3"
+  startRelay
+  shift 1
+  pull "$1" "$2"
+# shell
 elif [ "$1" = "shell" ]; then
-	startRelay
-	if [ "$#" -eq 1 ]; then # if no command is specified, start a shell
-		ssh -p"$LOCALPORT" "$USER""@""$IPADDR"
-	else # run the command on the remote device
-		shift 1 # strip first argument (i.e., "shell"), leaving only remaining args
-		ssh -p"$LOCALPORT" "$USER""@""$IPADDR" "$@"
-	fi
+  startRelay
+  shift 1
+  shell "$@"
+# install
+elif [ "$1" = "install" ]; then
+  startRelay
+  shift 1
+  install "$1"
+# list
 elif [ "$1" = "list" ]; then
-	listDevices
+  listDevices
+# devices
 elif [ "$1" = "devices" ]; then
-	listDevices
+  listDevices
+# help
 elif [ "$1" = "help" ]; then
 # FIXME: probably could just put all this in the catch-all.
 # Unless someone knows a good reason I shouldn't.
-	usageHelp
+  usageHelp
 elif [ "$1" = "--help" ]; then
-	usageHelp
+  usageHelp
 elif [ "$1" = "-help" ]; then
-	usageHelp
+  usageHelp
 else
-	usageHelp
+  usageHelp
 fi
 
 # clean-up
