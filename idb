@@ -124,11 +124,7 @@ pull() {
 }
 
 shell() {
-  if [ "$#" -eq 0 ]; then # if no command is specified, start a shell
-    ssh -p"$LOCALPORT" "$USER""@""$IPADDR"
-  else # run the command on the remote device
-    ssh -p"$LOCALPORT" "$USER""@""$IPADDR" "$@"
-  fi
+  ssh -p"$LOCALPORT" "$USER""@""$IPADDR" "$@"
 }
 
 install() {
