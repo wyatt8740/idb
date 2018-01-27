@@ -2,7 +2,7 @@
 
 # Defines at top of file for easy editing
 LOCALPORT=2222 # port on computer this runs on.
-REMOTEPORT=22 # port sshd runs on on the device. Default is usually 22.
+REMOTEPORT=50022 # port sshd runs on on the device. Default is usually 22.
 USER="mobile" # user on iDevice
 IPADDR="127.0.0.1" # don't change unless you plan to use this for wireless ssh.
 IPA_INSTALL_PROG="ipainstaller" # Program on the iDevice to install IPA's with
@@ -148,13 +148,13 @@ echo "`basename "$0"`"" shell"
 echo "    Starts a remote shell on the iDevice."
 echo "`basename "$0"`"" shell [command]"
 echo "    Starts a remote shell on the iDevice, runs the given command, and exits."
-echo "`basename "$0"`"" devices"
-echo "    Lists the UDID's of all connected devices. Part of preliminary"
-echo "    (incomplete but planned) support for multi-device capability."
 echo "`basename "$0"`"" install [target]"
 echo "    Installs the indicated target IPA on the iDevice using ""$IPA_INSTALL_PROG""."
 echo "    Will need modification to work with other CLI IPA installer programs"
 echo "    (which need to be installed on the iDevice itself via Cydia or similar)."
+echo "`basename "$0"`"" devices"
+echo "    Lists the UDID's of all connected devices. Part of preliminary"
+echo "    (incomplete but planned) support for multi-device capability."
 echo "`basename "$0"`"" list"
 echo "    Synonym for '""$0"" devices'."
 echo "`basename "$0"`"" help"
