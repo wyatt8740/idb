@@ -1,11 +1,17 @@
 #! /bin/sh
+# Definitions at top of file for easy editing
+LOCALPORT=2222 # Port on computer this runs on.
 
-# Defines at top of file for easy editing
-LOCALPORT=2222 # port on computer this runs on.
-REMOTEPORT=50022 # port sshd runs on on the device. Default is usually 22.
-USER="mobile" # user on iDevice
-IPADDR="127.0.0.1" # don't change unless you plan to use this for wireless ssh.
-IPA_INSTALL_PROG="ipainstaller" # Program on the iDevice to install IPA's with
+REMOTEPORT=22 # Port sshd runs on on the device. Default is usually 22.
+
+DEVICE_USER="mobile" # User name on iDevice
+
+IPA_INSTALL_PROG="ipainstaller" # Program on the iDevice to install IPA's with.
+
+IPROXY_PROG="iproxy-quiet" # Change to 'iproxy' if you don't want to use my
+                               # patched version or haven't renamed it.
+
+IPADDR="127.0.0.1" # Don't change unless you plan to use this for wireless ssh.
 
 #Documentation follows. Script is at end of documentation.
 ## iOS Debug Bridge"
@@ -31,6 +37,8 @@ IPA_INSTALL_PROG="ipainstaller" # Program on the iDevice to install IPA's with
 #     (incomplete but planned) support for multi-device capability.
 # idb list
 #     Synonym for `idb devices`.
+# idb kill-server
+#     Kills all instances of 'iproxy,' the TCP-over-usbmuxd forwarding program.
 # idb help
 #     Show this usage information.
 # idb -h
@@ -93,17 +101,21 @@ IPA_INSTALL_PROG="ipainstaller" # Program on the iDevice to install IPA's with
 #   echo authstr >> /var/mobile/.ssh/authorized_keys
 #   #(where authstr is the output of `cat ~/.ssh/id_rsa.pub` on the computer)
 #
-# Alternatively if you want to log in as root, you'd change the "USER" field
+# Alternatively if you want to log in as root, you'd change the "DEVICE_USER" field
 # above in this script and write to /var/root/.ssh/authorized_keys instead.
 
 ### SCRIPT BODY STARTS HERE ###
+# remove grep aliases as to avoid color highlighting potential issues
+# don't show any error messages
+# (used for kill-server)
+2>/dev/null 1>&2 unalias grep
 
 IPROXYPID="" # placeholder
 
 startRelay() {
   # hide iproxy output. Look here if you can't make it work and remove the
   # pipe.
-  iproxy-quiet "$LOCALPORT" "$REMOTEPORT" > /dev/null 2>&1 &
+  "$IPROXY_PROG" "$LOCALPORT" "$REMOTEPORT" > /dev/null 2>&1 &
   IPROXYPID="$!"
 }
 
@@ -116,25 +128,42 @@ listDevices() {
 }
 
 push() {
-  scp -P"$LOCALPORT" "$1" "$USER""@""$IPADDR"":""$2"
+  scp -P"$LOCALPORT" "$1" "$DEVICE_USER""@""$IPADDR"":""$2"
 }
 
 pull() {
-  scp -P"$LOCALPORT" "$USER""@""$IPADDR"":""$1" "$2"
+  scp -P"$LOCALPORT" "$DEVICE_USER""@""$IPADDR"":""$1" "$2"
 }
 
 shell() {
-  ssh -p"$LOCALPORT" "$USER""@""$IPADDR" "$@"
+  set -x
+  ssh -p"$LOCALPORT" "$DEVICE_USER""@""$IPADDR" "$@"
+  set +x
+}
+
+killServer() {
+  # Only POSIX way to get PID's of processes by name that I can find.
+  # pidof is not POSIX, nor is pkill, nor is killall.
+  # this makes a space-separated list of PID's to kill, and then pumps them
+  # through xargs to kill. Since POSIX kill does not explicitly say that
+  # killing multiple PID's with one command is supported, I run it once for
+  # each PID in the list.
+  # I am 99.9% sure this sed usage is POSIX, but I'm not good at
+  # regexes.
+  echo "Killing all instances of ""$IPROXY_PROG""..."
+	PIDS=`ps -o pid,comm  -u "$USER" | grep "$IPROXY_PROG" | sed 's/\s.*$//' | tr '\n' ' '`
+  echo "$PIDS" | xargs -n 1 kill
+  echo "Done."
 }
 
 install() {
   FILENAME=`basename "$1"`
   echo "Pushing ""$1"" to the iDevice..."
-  push "$1" "/private/var/""$USER""/""$FILENAME"
+  push "$1" "/private/var/""$DEVICE_USER""/""$FILENAME"
   echo "Installing ""$FILENAME"" using ""$IPA_INSTALL_PROG""... Please wait."
-  shell "$IPA_INSTALL_PROG" "/private/var/""$USER""/""$FILENAME"
+  shell "$IPA_INSTALL_PROG" "/private/var/""$DEVICE_USER""/""$FILENAME"
   echo "Install program finished, deleting the IPA from the iDevice..."
-  shell rm "/private/var/""$USER""/""$FILENAME"
+  shell rm "/private/var/""$DEVICE_USER""/""$FILENAME"
   echo "Done."
 }
 
@@ -157,6 +186,8 @@ echo "    Lists the UDID's of all connected devices. Part of preliminary"
 echo "    (incomplete but planned) support for multi-device capability."
 echo "`basename "$0"`"" list"
 echo "    Synonym for '""$0"" devices'."
+echo "`basename "$0"`"" kill-server"
+echo "    Kills all instances of ""$IPROXY_PROG"", the TCP-over-usbmuxd program."
 echo "`basename "$0"`"" help"
 echo "    Show this usage information."
 echo "`basename "$0"`"" -h"
@@ -194,6 +225,9 @@ elif [ "$1" = "list" ]; then
 # devices
 elif [ "$1" = "devices" ]; then
   listDevices
+# kill-server
+elif [ "$1" = "kill-server" ]; then
+  killServer
 # help
 elif [ "$1" = "help" ]; then
 # FIXME: probably could just put all this in the catch-all.
