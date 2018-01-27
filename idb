@@ -151,7 +151,7 @@ echo "    Starts a remote shell on the iDevice, runs the given command, and exit
 echo "`basename "$0"`"" devices"
 echo "    Lists the UDID's of all connected devices. Part of preliminary"
 echo "    (incomplete but planned) support for multi-device capability."
-echo "`baename "$0"`"" install [target]"
+echo "`basename "$0"`"" install [target]"
 echo "    Installs the indicated target IPA on the iDevice using ""$IPA_INSTALL_PROG""."
 echo "    Will need modification to work with other CLI IPA installer programs"
 echo "    (which need to be installed on the iDevice itself via Cydia or similar)."
