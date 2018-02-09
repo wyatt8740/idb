@@ -2,7 +2,7 @@
 # Definitions at top of file for easy editing
 LOCALPORT=2222 # Port on computer this runs on.
 
-REMOTEPORT=50022 # Port sshd runs on on the device. Default is usually 22.
+REMOTEPORT=22 # Port sshd runs on on the device. Default is usually 22.
 
 DEVICE_USER="mobile" # User name on iDevice
 
