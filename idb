@@ -135,9 +135,11 @@ pull() {
   # if only one argument supplied, the file's destination is in the current
   # directory.
   if [ -z "$2" ]; then
-    2="."
+    DEST="."
+  else
+    DEST="$2"
   fi
-  scp -P"$LOCALPORT" "$DEVICE_USER""@""$IPADDR"":""$1" "$2"
+  scp -P"$LOCALPORT" "$DEVICE_USER""@""$IPADDR"":""$1" "$DEST"
 }
 
 shell() {
