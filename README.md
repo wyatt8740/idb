@@ -26,6 +26,14 @@ There are several variables defined inside the script (such as the user to
 log in as, the port `sshd` is listening on on the iDevice, and what port is
 desired to bind it to on the host machine).
 
+#### Setting up/connecting to the device
+You'll want to edit the script itself if you want it to work. `sshd` listens
+by default on port 22, but I run it on port 50022 on my iDevice, so that at
+the bare minimum will need changing.
+
+All the variables that I think are likely to need changing are near the top of
+the file (right below the comment block which contains further documentation).
+
 #### Authenticating with the device
 
 By default, you will need to type your user's password on each command.
@@ -47,17 +55,9 @@ your preferred user is the root account on the device or not.
 ~/.ssh/authorized_keys` (where you are logged in with the account you want to
 run your `idb` commands as on the device).
 
-
 #### History
 
 As an Android developer with an old jailbroken iPhone 4S I toy with
 occasionally, I was getting annoyed with typing in `ssh`/`scp` commands
 constantly to make my device do things, so I decided to write a script for
 it.
-
-You'll want to edit the script itself if you want it to work. `sshd` listens
-by default on port 22, but I run it on port 50022 on my iDevice, so that at
-the bare minimum will need changing.
-
-All the variables that I think are likely to need changing are near the top of
-the file (right below the comment block which contains further documentation).
