@@ -26,9 +26,27 @@ There are several variables defined inside the script (such as the user to
 log in as, the port `sshd` is listening on on the iDevice, and what port is
 desired to bind it to on the host machine).
 
-Optionally, to remove the requirement to enter a password with every push/pull/
+#### Authenticating with the device
+
+By default, you will need to type your user's password on each command.
+
+Optionally, however, to remove the requirement to enter a password with every push/pull/
 shell command, one may use key authentication to log in. See the documentation
 in the script itself for details.
+
+If you need any more help with this functionality, I can try to help out, but
+here is a summary:
+
+1. Find your desktop/laptop's SSH public key file (usually
+`~/.ssh/id_rsa.pub`). If it does not exist, run `ssh-keygen` to create it.
+2. Do an `idb push` or manual `scp` to copy the file over to your idevice.
+3. Confirm that ~/.ssh exists and is a directory on the idevice. Typically,
+this will be either `/var/mobile/.ssh` or `/var/root/.ssh`, depending on if
+your preferred user is the root account on the device or not.
+3. On a shell on the idevice, run `cat /path/to/pubkey >> 
+~/.ssh/authorized_keys` (where you are logged in with the account you want to
+run your `idb` commands as on the device).
+
 
 #### History
 
