@@ -57,7 +57,8 @@ still need to compile the "iproxy" tool from the open-source clone, libusbmuxd
 Put the binary in a directory in your $PATH variable. I use "iproxy-quiet",
 which is a custom version of it I made that doesn't print information except
 on certain errors (i.e. it follows the unix philosophy better). You will have
-to edit this file to use regular iproxy.
+to edit the script to use regular iproxy (just change the variable
+`IPROXY_PROG` near the top of the file).
 
   * Included in this repository is a patch which should allow you to build
 your own "iproxy-quiet". Apply the patch with either
