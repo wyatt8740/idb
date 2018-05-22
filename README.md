@@ -5,6 +5,13 @@ An emulation of a handful of useful adb commands I use for Android devices,
 adapted for jailbroken iOS devices connected via USB.
 Supports only one iDevice plugged in at a time as of now.
 
+#### History
+
+As an Android developer with an old jailbroken iPhone 4S I toy with
+occasionally, I was getting annoyed with typing in `ssh`/`scp` commands
+constantly to make my device do things, so I decided to write a script for
+it.
+
 ## Usage:
 ````
 idb push [target] [destination]
@@ -56,7 +63,8 @@ libusbmuxd source root.
   * For *incomplete* (currently inoperable) multi-device support,
 libimobiledevice's "tools" are also required (specifically, "idevice_id").
 These tools are in the 'tools' directory of
-https://github.com/libimobiledevice/libimobiledevice.git .
+https://github.com/libimobiledevice/libimobiledevice.git . This can be skipped
+if you don't want to help fix multi-device support or attempt to use it.
 
 ### On the iDevice:
   * The device has to be connected via USB and have sshd listening on the port
@@ -97,7 +105,8 @@ On the iDevice (probably over ssh), run:
 Alternatively if you want to log in as root, you'd change the "DEVICE_USER" field
 above in this script and write to /var/root/.ssh/authorized_keys instead.
 
-Old readme:
+# Old readme
+## Kept for posterity while I work on the rewritten readme.
 
 # iOS Debug Bridge (idb)
 
