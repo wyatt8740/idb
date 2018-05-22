@@ -34,45 +34,46 @@ idb --help
 
 ### System Requirements:
 #### On the computer:
-    usbmuxd (https://github.com/libimobiledevice/usbmuxd.git) needs to be
+  * `usbmuxd` (https://github.com/libimobiledevice/usbmuxd.git) needs to be
 running for this to work. Tested on Debian Linux, but probably works in
 Mac OS (or Windows with MSYS/Cygwin), based on past experience. On those
 platforms, installing iTunes from Apple will get you usbmuxd, but you'll
-still need to compile the "iproxy" tool from the open-source clone of
-libusbmuxd (see below).
+still need to compile the "iproxy" tool from the open-source clone, libusbmuxd
+(see the next item in this list.)
 
-"iproxy", found at https://github.com/libimobiledevice/libusbmuxd.git
+  * `iproxy`, found at https://github.com/libimobiledevice/libusbmuxd.git
 Put the binary in a directory in your $PATH variable. I use "iproxy-quiet",
 which is a custom version of it I made that doesn't print information except
 on certain errors (i.e. it follows the unix philosophy better). You will have
 to edit this file to use regular iproxy.
 
-  Included in this repository is a patch which should allow you to build
+  * Included in this repository is a patch which should allow you to build
 your own "iproxy-quiet". Apply the patch with either
 `git apply iproxy-quiet.patch` or `patch -p1 < iproxy-quiet.patch` from the
 libusbmuxd source root.
 
-  For *incomplete* (currently inoperable) multi-device support,
+  * For *incomplete* (currently inoperable) multi-device support,
 libimobiledevice's "tools" are also required (specifically, "idevice_id").
 These tools are in the 'tools' directory of
 https://github.com/libimobiledevice/libimobiledevice.git .
 
 ### On the iDevice:
-  The device has to be connected via USB and have sshd listening on the port
+  * The device has to be connected via USB and have sshd listening on the port
 defined above as REMOTEPORT. Due to the sshd requirement, the device must be
 jailbroken. In Cydia, sshd is installed through the package "OpenSSH" (called
 "openssh", note the casing, if you install it via apt on the command-line).
 
-  Note also that you can get openssh either from Saurik's repository
+  * Note also that you can get openssh either from Saurik's repository
 (available by default on basically any jailbroken iDevice), or from other
 sources like ios-webstack (see http://ios-webstack.tk ). ios-webstack has
 a newer version of OpenSSH than Saurik's repository does as of January 2018.
 
-  This script can probably be easily adapted for wireless transfers by
+  * This script can probably be easily adapted for wireless transfers by
 commenting out the iproxy stuff and changing the IP address/LOCALPORT to
 the device address and the port that it's sshd is listening on.
 
-  To avoid having to type a password every time, set up key authentication
+### Password-less Authentication
+  * To avoid having to type a password every time, set up key authentication
 between the computer and the iDevice. I DO NOT RECCOMEND disabling password
 login once key authentication is established.
 
