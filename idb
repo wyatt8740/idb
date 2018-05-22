@@ -2,7 +2,7 @@
 # Definitions at top of file for easy editing
 LOCALPORT=2222 # Port on the computer to use for iproxy's TCP forwarding.
 
-REMOTEPORT=22 # Port sshd runs on on the device. Default is usually 22.
+REMOTEPORT=50022 # Port sshd runs on on the device. Default is usually 22.
 
 DEVICE_USER="mobile" # User name on iDevice
 
@@ -18,11 +18,11 @@ IPADDR="127.0.0.1" # Don't change unless you plan to use this for wireless ssh.
 # (used for kill-server)
 2>/dev/null 1>&2 unalias grep
 
-IPROXYPID="" # placeholder
+IPROXYPID="" # placeholder global variable, set by some commands
 
 startRelay() {
   # hide iproxy output. Look here if you can't make it work and remove the
-  # pipe.
+  # pipe to see the diagnostics.
   "$IPROXY_PROG" "$LOCALPORT" "$REMOTEPORT" > /dev/null 2>&1 &
   IPROXYPID="$!"
 }
@@ -40,7 +40,7 @@ push() {
 }
 
 pull() {
-  # if only one argument supplied, the file's destination is in the current
+  # if only one argument is supplied, the file's destination is in the current
   # directory.
   if [ -z "$2" ]; then
     DEST="."
@@ -63,7 +63,7 @@ killServer() {
   # through xargs to kill. Since POSIX kill does not explicitly say that
   # killing multiple PID's with one command is supported, I run it once for
   # each PID in the list.
-  # I am 99.9% sure this sed usage is POSIX, but I'm not good at
+  # I am 99.9% sure this sed usage is POSIX, but I'm not very good at
   # regexes.
   echo "Killing all instances of ""$IPROXY_PROG""..."
 	PIDS=`ps -o pid,comm  -u "$USER" | grep "$IPROXY_PROG" | sed 's/\s.*$//' | tr '\n' ' '`
@@ -83,10 +83,18 @@ install() {
 }
 
 forward() {
-  echo "forward: ""$#"" arg(s) given" 1>&2
-  echo "(Sorry, not yet implemented.)" 1>&2
+  if [ ! "$#" -eq 2 ]; then
+    echo "forward: error: Need two args, but was given ""$#""." 1>&2
+  else
+    echo "Attempting to forward between local port ""$1"" & remote port ""$2""."
+    echo "Use ^C to close the connection (it runs in the foreground.)"
+    "$IPROXY_PROG" "$@"
+  fi
+
 }
 
+# Printed when no command is given as a memory jogger.
+# 'usageHelp' contains the full descriptions.
 usageHelpBrief() {
   echo "Abridged usage:"
   echo "  ""`basename "$0"`"" push [target] [destination]"
@@ -116,7 +124,7 @@ usageHelp() {
   echo "`basename "$0"`"" forward [local] [remote]"
   echo "    Forwards socket connections (currently only TCP ports are tested)."
   echo "    Unlike ADB, [local] and [remote] here should be integer values. That is,"
-  echo "    'tcp:25565', the ADB syntax, would become just '25565' here."
+  echo "    'tcp:25565', the ADB syntax, would be just '25565' here."
   echo "`basename "$0"`"" install [target]"
   echo "    Installs the indicated target IPA on the iDevice using ""$IPA_INSTALL_PROG""."
   echo "    Will need modification to work with other CLI IPA installer programs"
@@ -183,8 +191,9 @@ elif [ "$1" = "-help" ]; then
 else
   if [ "$#" -gt 0 ]; then # If we were given a command, but it was incorrect
     # The fallback case should dump the help text to stderr rather than stdout.
-    echo "`basename "$0"`"": Error: '""$1""' is not a valid command. Please note that not all 'adb'" 1>&2
-    echo "commands have exact analogues in this script." 1>&2
+    echo "`basename "$0"`"": Error: '""$1""' is not a valid command." 1>&2
+    echo "Please note that not all 'adb'commands have exact analogues in this" 1>&2
+    echo "script." 1>&2
   else
     echo "`basename "$0"`"": Error: No command given." 1>&2
     usageHelpBrief 1>&2
@@ -192,5 +201,5 @@ else
 fi
 
 # clean-up
-kill "$IPROXYPID" 2>/dev/null
+kill "$IPROXYPID" 2>/dev/null # not all commands need to use iproxy, but for those that do we need to make sure it's closed.
 true #return 0

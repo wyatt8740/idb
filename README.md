@@ -22,6 +22,10 @@ idb shell
     Starts a remote shell on the iDevice.
 idb shell [command]
     Starts a remote shell on the iDevice, runs the given command, and exits.
+idb forward [local] [remote]
+    Forwards socket connections (currently only TCP ports are tested).
+    Unlike ADB, [local] and [remote] here should be integer values. That is,
+    'tcp:25565', the ADB syntax, would be just '25565' here.
 idb install [target]
     Installs the indicated target IPA on the iDevice using `ipainstaller`.
     Will need modification to work with other CLI IPA installer programs
@@ -105,8 +109,22 @@ On the iDevice (probably over ssh), run:
 Alternatively if you want to log in as root, you'd change the "DEVICE_USER" field
 above in this script and write to /var/root/.ssh/authorized_keys instead.
 
+### Troubleshooting
+
+Errors I've encountered:
+  * `bind(): Permission denied` when forwarding
+  
+Make sure your selected local and remote ports are not already bound by other
+applications.
+
+  * `ssh_exchange_identification: read: Connection reset by peer`
+  
+Check that the variable REMOTEPORT is set to the port that the idevice is
+listening for SSH connections on. Also make sure `usbmuxd` is running and has
+permissions to access your device (might require a udev rule or similar.)
+
 # Old readme
-## Kept for posterity while I work on the rewritten readme.
+Kept for posterity while I work on the rewritten readme.
 
 # iOS Debug Bridge (idb)
 
