@@ -73,7 +73,7 @@ commenting out the iproxy stuff and changing the IP address/LOCALPORT to
 the device address and the port that it's sshd is listening on.
 
 ### Password-less Authentication
-  * To avoid having to type a password every time, set up key authentication
+To avoid having to type a password every time, set up key authentication
 between the computer and the iDevice. I DO NOT RECCOMEND disabling password
 login once key authentication is established.
 
