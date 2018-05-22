@@ -125,19 +125,20 @@ it.
 
 #### TL;DR description of functionality
 
-`idb` is a script that wraps `ssh` and `scp` to emulate some of the most
-often-used functionality encompassed by Android's `adb` (Android Debug Bridge).
-It does this over a USB cable using the 'iproxy' program from
-[libusbmuxd](https://github.com/libimobiledevice/libusbmuxd.git), which is
-located in the 'tools/' subdirectory of its repository.
+`idb` is a POSIX bourne shell script that wraps `ssh` and `scp` to emulate
+some of the most often-used functionality encompassed by Android's `adb`
+(Android Debug Bridge). It does this over a USB cable using the `iproxy`
+program from [libusbmuxd](https://github.com/libimobiledevice/libusbmuxd.git),
+which is located in the 'tools/' subdirectory of its repository.
 
 `iproxy` relays TCP connections over a USB cable, allowing for ssh-over-USB,
 and with that `scp` for file transfers over USB. This is extremely useful both
 for higher transfer speeds vs. wireless, and for phones with spotty wireless
-capabilities following some form of damage.
+capabilities following some form of damage or defective design.
 
 It *should* work with most of the common Unix/Linux shells, since it targets
 bourne shell and (to my knowledge) complies entirely with the POSIX standard.
+Let me know if you find somewhere it doesn't.
 
 #### Setting up/connecting to the device
 
