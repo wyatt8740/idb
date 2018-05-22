@@ -42,7 +42,7 @@ platforms, installing iTunes from Apple will get you usbmuxd, but you'll
 still need to compile the "iproxy" tool from the open-source clone, libusbmuxd
 (see the next item in this list.)
 
-  * `iproxy`, ([https://github.com/libimobiledevice/libusbmuxd.git](https://github.com/libimobiledevice/libusbmuxd.git)).
+  * `iproxy`, found in the 'tools' subdirectory of [https://github.com/libimobiledevice/libusbmuxd.git](https://github.com/libimobiledevice/libusbmuxd.git).
 Put the binary in a directory in your $PATH variable. I use "iproxy-quiet",
 which is a custom version of it I made that doesn't print information except
 on certain errors (i.e. it follows the unix philosophy better). You will have
