@@ -6,6 +6,7 @@ adapted for jailbroken iOS devices connected via USB.
 Supports only one iDevice plugged in at a time as of now.
 
 ## Usage:
+````
 idb push [target] [destination]
     Copies a targeted file on the computer to a destination on the iDevice.
 idb pull [target] [destination]
@@ -31,7 +32,7 @@ idb -h
     Synonym for `idb help`.
 idb --help
     Synonym for `idb help`.
-
+````
 ### System Requirements:
 #### On the computer:
   * `usbmuxd` (https://github.com/libimobiledevice/usbmuxd.git) needs to be
@@ -78,14 +79,18 @@ between the computer and the iDevice. I DO NOT RECCOMEND disabling password
 login once key authentication is established.
 
 On the computer, run:
+````
     ssh-keygen
     (leave default filenames for the keys)
     ssh-keygen -p
     (leave default filenames for the keys)
+````
 
 On the iDevice (probably over ssh), run:
+````
     mkdir /var/mobile/.ssh
     echo authstr >> /var/mobile/.ssh/authorized_keys
+````
 
 (where authstr is the output of `cat ~/.ssh/id_rsa.pub` on the computer)
 
