@@ -1,6 +1,6 @@
 #! /bin/sh
 # Definitions at top of file for easy editing
-LOCALPORT=2222 # Port on computer this runs on.
+LOCALPORT=2222 # Port on the computer to use for iproxy's TCP forwarding.
 
 REMOTEPORT=22 # Port sshd runs on on the device. Default is usually 22.
 
@@ -10,7 +10,6 @@ IPA_INSTALL_PROG="ipainstaller" # Program on the iDevice to install IPA's with.
 
 IPROXY_PROG="iproxy-quiet" # Change to 'iproxy' if you don't want to use my
                                # patched version or haven't renamed it.
-
 IPADDR="127.0.0.1" # Don't change unless you plan to use this for wireless ssh.
 
 #Documentation follows. Script is at end of documentation.
@@ -192,15 +191,15 @@ echo "`basename "$0"`"" devices"
 echo "    Lists the UDID's of all connected devices. Part of preliminary"
 echo "    (incomplete but planned) support for multi-device capability."
 echo "`basename "$0"`"" list"
-echo "    Synonym for '""$0"" devices'."
+echo "    Synonym for '""`basename "$0"`"" devices'."
 echo "`basename "$0"`"" kill-server"
 echo "    Kills all instances of ""$IPROXY_PROG"", the TCP-over-usbmuxd program."
 echo "`basename "$0"`"" help"
 echo "    Show this usage information."
 echo "`basename "$0"`"" -h"
-echo "    Synonym for '""$0"" help'."
+echo "    Synonym for '""`basename "$0"`"" help'."
 echo "`basename "$0"`"" --help"
-echo "    Synonym for '""$0"" help'."
+echo "    Synonym for '""`basename "$0"`"" help'."
 echo
 echo "Some configuration inside this script's source may be required."
 echo "Open this program in a text editor for more documentation."
