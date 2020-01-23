@@ -1,0 +1,28 @@
+#! /bin/sh
+# List all iOS devices attached to the computer via USB.
+# Uses `idevicename`, `idevice_id`, and `ideviceinfo` from libimobiledevice.
+# On Debian, they are all in the package `libimobiledevice-utils`.
+
+# This script should be 100% POSIX-compliant. Replacing the `expr` call with
+# $(( )) and replacing all the [ ]'s with [[ ]]'s would probably speed it up
+# some in bash and ksh, but sacrifices 100% POSIX compliance.
+
+SPACING=18
+fetch(){
+  # ensure even spacing for each column
+  printf '  '"$2"':'
+  LEN=$( expr "$SPACING" '-' "$( printf "$2" | wc -c )" )
+  I=0
+  while [ "$I" -lt "$LEN" ]; do
+    printf ' '
+    I=`expr $I '+' 1`
+  done
+  ideviceinfo -u "$1" -k "$2"
+}
+
+idevice_id -l | while read UUID; do
+  idevicename -u "$UUID" | tr '\n' ':' | sed 's/:$/:\n/'
+  printf "  UUID:              ""$UUID"'\n'
+  fetch "$UUID" "ProductType"
+  fetch "$UUID" "ProductVersion"
+done
