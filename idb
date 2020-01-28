@@ -6,11 +6,15 @@ REMOTEPORT=22 # Port sshd runs on on the device. Default is usually 22.
 
 DEVICE_USER="mobile" # User name on iDevice
 
+SSH_INSTALL=1 # 0 to use ideviceinstaller, anything else to run a command on the iDevice.
+
 IPA_INSTALL_PROG="ipainstaller" # Program on the iDevice to install IPA's with.
 
 IPROXY_PROG="iproxy-quiet" # Change to 'iproxy' if you don't want to use my
                                # patched version or haven't renamed it.
 IPADDR="127.0.0.1" # Don't change unless you plan to use this for wireless ssh.
+
+UDID='' # empty by default, can be set with '-u'
 
 ### SCRIPT BODY STARTS HERE ###
 # remove grep aliases as to avoid color highlighting potential issues
@@ -20,10 +24,20 @@ IPADDR="127.0.0.1" # Don't change unless you plan to use this for wireless ssh.
 
 IPROXYPID="" # placeholder global variable, set by some commands
 
+# check if UDID is specified. If not, the tools I call should default to the
+# first device that is enumerated by 'idevice_id -l'.
+if [ "$1" = '-u' ]; then
+  shift
+  UDID="$1"
+  shift
+else
+  UDID=`idevice_id -l | head -n 1`
+fi
+
 startRelay() {
   # hide iproxy output. Look here if you can't make it work and remove the
   # pipe to see the diagnostics.
-  "$IPROXY_PROG" "$LOCALPORT" "$REMOTEPORT" > /dev/null 2>&1 &
+  "$IPROXY_PROG" "$LOCALPORT" "$REMOTEPORT" "$UDID" > /dev/null 2>&1 &
   IPROXYPID="$!"
 }
 
@@ -32,7 +46,26 @@ listDevices() {
   # one iDevice. Uses "idevice_id" from libimobiledevice tools at
   # https://github.com/libimobiledevice/libimobiledevice.git
   echo "Listing all iDevice UDID's."
-  idevice_id -l
+  SPACING=18
+  fetch(){
+    # ensure even spacing for each column
+    printf '  '"$2"':'
+    LEN=$( expr "$SPACING" '-' "$( printf "$2" | wc -c )" )
+    I=0
+    while [ "$I" -lt "$LEN" ]; do
+      printf ' '
+      I=`expr $I '+' 1`
+    done
+    ideviceinfo -u "$1" -k "$2"
+  }
+  
+  idevice_id -l | while read UUID; do
+    idevicename -u "$UUID" | tr '\n' ':' | sed 's/:$/:\n/'
+    printf "  UUID:              ""$UUID"'\n'
+    fetch "$UUID" "ProductType"
+    fetch "$UUID" "ProductVersion"
+  done
+#  idevice_id -l
 }
 
 push() {
@@ -72,13 +105,18 @@ killServer() {
 }
 
 install() {
-  FILENAME=`basename "$1"`
-  echo "Pushing ""$1"" to the iDevice..."
-  push "$1" "/private/var/""$DEVICE_USER""/""$FILENAME"
-  echo "Installing ""$FILENAME"" using ""$IPA_INSTALL_PROG""... Please wait."
-  shell "$IPA_INSTALL_PROG" "/private/var/""$DEVICE_USER""/""$FILENAME"
-  echo "Install program finished, deleting the IPA from the iDevice..."
-  shell rm "/private/var/""$DEVICE_USER""/""$FILENAME"
+  if [ "$SSH_INSTALL" -ne 0 ]; then
+    FILENAME=`basename "$1"`
+    echo "Pushing ""$1"" to the iDevice..."
+    push "$1" "/private/var/""$DEVICE_USER""/""$FILENAME"
+    echo "Installing ""$FILENAME"" using ""$IPA_INSTALL_PROG""... Please wait."
+    shell "$IPA_INSTALL_PROG" "/private/var/""$DEVICE_USER""/""$FILENAME"
+    echo "Install program finished, deleting the IPA from the iDevice..."
+    shell rm "/private/var/""$DEVICE_USER""/""$FILENAME"
+  else
+    # use ideviceinstaller and obviate the need for ssh availability.
+    ideviceinstaller -u "$UDID" -i "$1"
+  fi
   echo "Done."
 }
 
@@ -167,7 +205,9 @@ elif [ "$1" = "forward" ]; then
   forward "$@"
 # install
 elif [ "$1" = "install" ]; then
-  startRelay
+  if [ "$SSH_INSTALL" -ne 0 ]; then
+    startRelay
+  fi
   shift 1
   install "$1"
 # list
