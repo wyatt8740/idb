@@ -1,5 +1,3 @@
-(This document is currently under construction. Please pardon the mess.)
-
 # idb - "iOS Debug Bridge"
 An emulation of a handful of useful adb commands I use for Android devices,
 adapted for jailbroken iOS devices connected via USB.
