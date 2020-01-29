@@ -77,6 +77,8 @@ libusbmuxd (see the next item in this list.)
 It is also obtainable in some linux distros - in Debian (and presumably
 Ubuntu), it is in the package `libusbmuxd-tools`.
 
+  * `ideviceinstaller` for some functionality. From [this repository](https://github.com/libimobiledevice/ideviceinstaller) of libimobiledevice.
+
 Whatever the case, if you compile `iproxy`, put the binary in a directory in
 your `$PATH` variable. I use `iproxy-quiet`, which is a custom version of it
 that I made that doesn't print information except on certain errors (i.e. it
