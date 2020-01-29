@@ -95,9 +95,10 @@ libusbmuxd source root.
 
 ### On the iDevice:
   * The device has to be connected via USB and have sshd listening on the port
-defined above as REMOTEPORT. Due to the sshd requirement, the device must be
-jailbroken. In Cydia, sshd is installed through the package "OpenSSH" (called
-"openssh", note the casing, if you install it via apt on the command-line).
+defined in the script as REMOTEPORT. Due to the sshd requirement, the device
+must be jailbroken. In Cydia, sshd is installed through the package "OpenSSH"
+(called "openssh", note the casing, if you install it via apt on the
+command-line).
 
   * Note also that you can get openssh either from Saurik's repository
 (available by default on basically any jailbroken iDevice), or from other
