@@ -3,7 +3,9 @@
 # idb - "iOS Debug Bridge"
 An emulation of a handful of useful adb commands I use for Android devices,
 adapted for jailbroken iOS devices connected via USB.
-Supports only one iDevice plugged in at a time as of now.
+
+Now (as of early 2020) supports multiple iOS devices connected simultaneously!
+Use `idb -u UDID [command]` to try it!
 
 #### History
 
@@ -14,6 +16,11 @@ it.
 
 ## Usage:
 ````
+idb [-u <UDID>] command [options]
+    -u <UDID> can optionally be placed before most commands to make them operate
+    on the device with the given UDID (check with "idb devices" or "idb list").
+
+Detailed command usage:
 idb push [target] [destination]
     Copies a targeted file on the computer to a destination on the iDevice.
 idb pull [target] [destination]
@@ -30,6 +37,19 @@ idb install [target]
     Installs the indicated target IPA on the iDevice using `ipainstaller`.
     Will need modification to work with other CLI IPA installer programs
     (which need to be installed on the iDevice itself via Cydia or similar).
+idb uninstall [appid]
+    Try to remove the app with the given ID from the iDevice. May fail on
+    system apps.
+idb remove [appid]
+    Synonym for `idb uninstall`.
+idb list-packages [-a|-u|-s|-x] [appid]
+    Lists packages installed on the iDevice. Has several optional flags:
+      -a: List all packages on the iDevice.
+      -u: List user packages on the iDevice (default).
+      -s: List system packages on the iDevice.
+      -x: List all packages on the iDevice in XML format.
+    If 'appid' is specified, only that package's information is displayed.
+    This is incompatible with -x (for now at least).
 idb devices
     Lists the UDID's of all connected devices. Part of preliminary
     (incomplete but planned) support for multi-device capability.
