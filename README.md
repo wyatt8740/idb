@@ -98,7 +98,9 @@ libusbmuxd source root.
 defined in the script as REMOTEPORT. Due to the sshd requirement, the device
 must be jailbroken. In Cydia, sshd is installed through the package "OpenSSH"
 (called "openssh", note the casing, if you install it via apt on the
-command-line).
+command-line). Newer iOS versions may need to install Dropbear as their SSH
+daemon instead; I have not done so on my newer iDevices yet (newest is a 5S).
+A couple of commands may work without SSH, such as `install`.
 
   * Note also that you can get openssh either from Saurik's repository
 (available by default on basically any jailbroken iDevice), or from other
