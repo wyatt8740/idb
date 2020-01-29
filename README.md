@@ -141,7 +141,9 @@ Errors I've encountered:
   * `bind(): Permission denied` when forwarding
   
 Make sure your selected local and remote ports are not already bound by other
-applications.
+applications. If you have multiple devices, try setting up their LOCALPORT
+values separately in the new `idb.conf` file. See the example idb.conf file for
+an example of how it works. Put it in `~/.config/idb.conf`.
 
   * `ssh_exchange_identification: read: Connection reset by peer`
   
