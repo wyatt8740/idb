@@ -71,11 +71,13 @@ platforms, installing iTunes from Apple will get you usbmuxd, but you'll
 still need to get or compile the "iproxy" tool from the open-source clone,
 libusbmuxd (see the next item in this list.)
 
-  * `iproxy`, found in the 'tools' subdirectory of [https://github.com/libimobiledevice/libusbmuxd.git](https://github.com/libimobiledevice/libusbmuxd.git).
-It is also obtainable in some linux distros - in Debian (and presumably
-Ubuntu), it is in the package `libusbmuxd-tools`.
+  * Because of the new multi-device support, libimobiledevice's "tools" are
+  also required (specifically, "idevice_id"). These tools are in the 'tools'
+  directory of https://github.com/libimobiledevice/libimobiledevice.git .
 
-  * `ideviceinstaller` for some functionality. From [this repository](https://github.com/libimobiledevice/ideviceinstaller) of libimobiledevice.
+  * `iproxy`, found in the 'tools' subdirectory of [https://github.com/libimobiledevice/libusbmuxd.git](https://github.com/libimobiledevice/libusbmuxd.git).
+  It is also obtainable in some linux distros - in Debian (and presumably
+  Ubuntu), it is in the package `libusbmuxd-tools`.
 
 Whatever the case, if you compile `iproxy`, put the binary in a directory in
 your `$PATH` variable. I use `iproxy-quiet`, which is a custom version of it
@@ -84,14 +86,12 @@ follows the Unix philosophy better). You will have to edit the script to use
 regular `iproxy` (just change the variable `IPROXY_PROG` near the top of the
 file).
 
+  * `ideviceinstaller` for some functionality. From [this repository](https://github.com/libimobiledevice/ideviceinstaller) of libimobiledevice.
+
   * Included in this repository is a patch which should allow you to build
 your own `iproxy-quiet`, if you choose. Apply the patch with either
 `git apply iproxy-quiet.patch` or `patch -p1 < iproxy-quiet.patch` from the
 libusbmuxd source root.
-
-  * For multi-device support, libimobiledevice's "tools" are also required
-(specifically, "idevice_id"). These tools are in the 'tools' directory of
-https://github.com/libimobiledevice/libimobiledevice.git .
 
 ### On the iDevice:
   * The device has to be connected via USB and have sshd listening on the port
