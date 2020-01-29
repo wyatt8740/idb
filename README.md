@@ -113,7 +113,7 @@ the device address and the port that it's sshd is listening on.
 
 ### Password-less Authentication
 To avoid having to type a password every time, set up key authentication
-between the computer and the iDevice. I DO NOT RECCOMEND disabling password
+between the computer and the iDevice. I DO NOT RECOMMEND disabling password
 login once key authentication is established.
 
 On the computer, run:
