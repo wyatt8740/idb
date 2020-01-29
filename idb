@@ -1,28 +1,90 @@
 #! /bin/sh
-# Definitions at top of file for easy editing
-LOCALPORT=2222 # Port on the computer to use for iproxy's TCP forwarding.
+# Definitions at top of file for easy editing.
 
-REMOTEPORT=22 # Port sshd runs on on the device. Default is usually 22.
+# Local machine's TCP relay port
+LOCALPORT=2222
+# Port on the computer to use for iproxy's TCP forwarding. Low port numbers
+# may require root on some systems.
 
-DEVICE_USER="mobile" # User name on iDevice
+# Remote port
+REMOTEPORT=22
+# The port sshd runs on on the device. The default sshd listens on is usually
+# port 22, so use that unless you've changed it on the iDevice in /etc/sshd_config
 
-SSH_INSTALL=1 # 0 to use ideviceinstaller, anything else to run a command on the iDevice.
+# "Overrides" configuration file
+CONFFILE="$HOME"'/.config/idb.conf'
+# Location of a file which contains UDID-specific override settings
+# (port numbers and such) for specific iDevices. See the sample idb.conf
+# for more information on how to use it. Only really handy if you have
+# more than one device wired in to your computer at a time.
 
-IPA_INSTALL_PROG="ipainstaller" # Program on the iDevice to install IPA's with.
+# User name on iDevice
+DEVICE_USER="mobile"
+# The user to log in as, for operations performed through SSH-over-USB.
+
+# ideviceinstaller name/path goes here.
+IDEVICEINSTALLER="ideviceinstaller"
+# You should change this only if you have ideviceinstaller outside of your
+# $PATH or you have renamed the program.
+
+# Should IPA's be installed via SSH commands or via libimobiledevice?
+# In future: should we use SSH or libimobiledevice functions to administer
+# your device, if both methods are available?
+SSH_PREFERRED=0
+#     0 to use ideviceinstaller, anything else to run a command on the iDevice
+# over an SSH connection via USB TCP relaying.
+#     In the future, this will be used to say that SSH is preferred over libusb
+# for all tasks where possible. This is useful if one of your devices is
+# connected via network instead of a USB cord, but requires SSH on your
+# iDevice. There are some things I have not figured out how to do without SSH,
+# so it is likely that for full functionality SSH will always be a requirement.
+#     The ideviceinstaller method is nicer for idevices that don't have sshd
+# started at boot, like modern tethered iOS jailbreaks (the poor things).
+# It also will work for non-jailbroken devices if the app is signed off on by
+# Apple, and is a lot less fickle to set up than sshd and iproxy since the
+# program comes with the unofficial FLOSS libimobiledevice suite. It can also
+# be compiled and installed to operate alongside the official library on OSX
+# and Windows.
+#     The SSH method is my original behavior and requires an IPA installer
+# program to be installed on the iDevice, which must be jailbroken and also
+# running an SSH daemon.
+
+REMOTE_IPA_INSTALL_PROG="ipainstaller" # Program on the iDevice to install IPA's with.
 
 IPROXY_PROG="iproxy-quiet" # Change to 'iproxy' if you don't want to use my
                                # patched version or haven't renamed it.
 IPADDR="127.0.0.1" # Don't change unless you plan to use this for wireless ssh.
 
-UDID='' # empty by default, can be set with '-u'
+UDID='' # If empty, the script chooses the first UDID enumerated later on.
 
 ### SCRIPT BODY STARTS HERE ###
 # remove grep aliases as to avoid color highlighting potential issues
 # don't show any error messages
 # (used for kill-server)
 2>/dev/null 1>&2 unalias grep
+2>/dev/null 1>&2 unalias tail
+2>/dev/null 1>&2 unalias awk
 
 IPROXYPID="" # placeholder global variable, set by some commands
+
+getCol() {
+  echo "$2" | awk '{ print $'"$1"' }'
+}
+confLoad() {
+  if [ -e "$HOME"'/.config/idb.conf' ]; then # if idb.conf exists
+    # search for given UDID.
+    # last instance supersedes previous ones (but you should not have multiple)
+    CONFLINE="$(grep '^'"$1"':' "$CONFFILE"|tail -n 1|sed 's/:/\t/g')"
+    if [ -n "$CONFLINE" ]; then # if conf line is not empty (was found)
+      REMOTEPORT="$(getCol 2 "$CONFLINE")"
+      LOCALPORT="$(getCol 3 "$CONFLINE")"
+      IPADDR="$(getCol 4 "$CONFLINE")"
+      SSH_PREFERRED="$(getCol 5 "$CONFLINE")"
+    fi # /if conf line was found
+  fi # /if idb.conf exists
+  # do nothing if no match was found or file doesn't exist (continue on)
+}
+
 
 # check if UDID is specified. If not, the tools I call should default to the
 # first device that is enumerated by 'idevice_id -l'.
@@ -30,9 +92,12 @@ if [ "$1" = '-u' ]; then
   shift
   UDID="$1"
   shift
-else
+else #choose first device that appears otherwise
   UDID=`idevice_id -l | head -n 1`
 fi
+# attempt to load UDID-specific config overrides from ~/.config/idb.conf, if
+# said file exists
+confLoad "$UDID"
 
 startRelay() {
   # hide iproxy output. Look here if you can't make it work and remove the
@@ -105,30 +170,71 @@ killServer() {
 }
 
 install() {
-  if [ "$SSH_INSTALL" -ne 0 ]; then
+  if [ "$SSH_PREFERRED" -ne 0 ]; then
     FILENAME=`basename "$1"`
-    echo "Pushing ""$1"" to the iDevice..."
-    push "$1" "/private/var/""$DEVICE_USER""/""$FILENAME"
-    echo "Installing ""$FILENAME"" using ""$IPA_INSTALL_PROG""... Please wait."
-    shell "$IPA_INSTALL_PROG" "/private/var/""$DEVICE_USER""/""$FILENAME"
+    echo 'Pushing '"$1"' to the iDevice...'
+    push "$1" '/private/var/'"$DEVICE_USER"'/'"$FILENAME"
+    echo 'Installing '"$FILENAME"' using '"$REMOTE_IPA_INSTALL_PROG"'... Please wait.'
+    shell "$REMOTE_IPA_INSTALL_PROG" "/private/var/""$DEVICE_USER""/""$FILENAME"
     echo "Install program finished, deleting the IPA from the iDevice..."
-    shell rm "/private/var/""$DEVICE_USER""/""$FILENAME"
+    shell rm '/private/var/'"$DEVICE_USER"'/'"$FILENAME"
   else
     # use ideviceinstaller and obviate the need for ssh availability.
-    ideviceinstaller -u "$UDID" -i "$1"
+    # nice for idevices that don't have sshd started at boot, like modern
+    # tethered ones (poor things).
+    "$IDEVICEINSTALLER" -u "$UDID" -i "$1"
   fi
   echo "Done."
+}
+
+remove() {
+  # todo: try to implement an ssh version of this command?
+  "$IDEVICEINSTALLER" -u "$UDID" -U "$1"
 }
 
 forward() {
   if [ ! "$#" -eq 2 ]; then
     echo "forward: error: Need two args, but was given ""$#""." 1>&2
+    echo "Syntax:" 1>&2
+    echo "  forward [local port] [remote port]" 1>&2
   else
     echo "Attempting to forward between local port ""$1"" & remote port ""$2""."
     echo "Use ^C to close the connection (it runs in the foreground.)"
     "$IPROXY_PROG" "$@"
   fi
 
+}
+
+listPackages() {
+  # last arg flag takes precedence, ignore all others
+  # default is to list user apps only
+  MODE='list_user'
+  # confusing syntax, but i'm saying "while $1 starts with a dash"
+  while case $1 in -*) true;; *) false;; esac; do
+    case $1 in
+      -a) #list all packages
+        MODE='list_all'
+        ;;
+      -u)
+        MODE='list_user'
+        ;;
+      -s)
+        MODE='list_system'
+        ;;
+      -x)
+        MODE='xml'
+        ;;
+      *)
+        echo "Warning: Unknown parameter passed to listPackages: ""$1" 1>&2
+        ;;
+    esac
+    shift
+  done
+  if [ -n "$1" ]; then
+    "$IDEVICEINSTALLER" -u "$UDID" -l -o "$MODE" | grep '^'"$1"','
+  else
+    "$IDEVICEINSTALLER" -u "$UDID" -l -o "$MODE"
+  fi
 }
 
 # Printed when no command is given as a memory jogger.
@@ -151,6 +257,11 @@ usageHelpBrief() {
 
 usageHelp() {
   echo "Usage:"
+  echo "`basename "$0"`"" [-u <UDID>] command [options]"
+  echo "    -u <UDID> can optionally be placed before most commands to make them operate"
+  echo '    on the device with the given UDID (check with "'"`basename "$0"`"' devices" or "'"`basename "$0"`"' list").'
+  echo ''
+  echo "Detailed descriptions:"
   echo "`basename "$0"`"" push [target] [destination]"
   echo "    Copies a targeted file on the computer to a destination on the iDevice."
   echo "`basename "$0"`"" pull [target] [destination]"
@@ -164,12 +275,26 @@ usageHelp() {
   echo "    Unlike ADB, [local] and [remote] here should be integer values. That is,"
   echo "    'tcp:25565', the ADB syntax, would be just '25565' here."
   echo "`basename "$0"`"" install [target]"
-  echo "    Installs the indicated target IPA on the iDevice using ""$IPA_INSTALL_PROG""."
-  echo "    Will need modification to work with other CLI IPA installer programs"
-  echo "    (which need to be installed on the iDevice itself via Cydia or similar)."
+  if [ "$SSH_PREFERRED" -ne 0 ]; then
+    echo "    Installs the indicated target IPA on the iDevice using ""$REMOTE_IPA_INSTALL_PROG""."
+    echo "    Will need modification to work with other CLI IPA installer programs"
+    echo "    (which need to be installed on the iDevice itself via Cydia or similar)."
+  else
+    echo '    Installs the indicated target IPA on the iDevice using '"$IDEVICEINSTALLER"
+    echo '    from libimobiledevice. '"$IDEVICEINSTALLER"' must of course be installed'
+    echo '    on this computer for this to work.'
+  fi
+  echo "`basename "$0"`"" list-packages [flags] [packagename]"
+  echo "    Lists packages installed on the iDevice. Has several optional flags:"
+  echo "        -a: List all packages on the iDevice."
+  echo "        -u: List user packages on the iDevice (default)."
+  echo "        -s: List system packages on the iDevice."
+  echo "        -x: List all packages on the iDevice in XML format."
+  echo "    If 'packagename' is specified, only that package's information is"
+  echo "    displayed. This is incompatible with -x (for now at least)."
   echo "`basename "$0"`"" devices"
   echo "    Lists the UDID's of all connected devices. Part of preliminary"
-  echo "    (incomplete but planned) support for multi-device capability."
+  echo "    (incomplete but in progress) support for multi-device capability."
   echo "`basename "$0"`"" list"
   echo "    Synonym for '""`basename "$0"`"" devices'."
   echo "`basename "$0"`"" kill-server"
@@ -205,11 +330,23 @@ elif [ "$1" = "forward" ]; then
   forward "$@"
 # install
 elif [ "$1" = "install" ]; then
-  if [ "$SSH_INSTALL" -ne 0 ]; then
+  if [ "$SSH_PREFERRED" -ne 0 ]; then
     startRelay
   fi
   shift 1
   install "$1"
+# uninstall (remove)
+elif [ "$1" = "uninstall" ]; then
+  shift 1
+  remove "$1"
+# remove
+elif [ "$1" = "remove" ]; then
+  shift 1
+  remove "$1"
+# list-packages
+elif [ "$1" = "list-packages" ]; then
+  shift 1
+  listPackages "$@"
 # list
 elif [ "$1" = "list" ]; then
   listDevices
