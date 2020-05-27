@@ -194,7 +194,33 @@ pull() {
 
 shell() {
   set -x
-  ssh -p"$LOCALPORT" "$DEVICE_USER""@""$IPADDR" "$@"
+  if [ $HAS_ESCAPIFY -eq 0 ]; then # has escapify
+    ssh -p"$LOCALPORT" "$DEVICE_USER""@""$IPADDR" "$(escapify "$@")"
+  else
+    ssh -p"$LOCALPORT" "$DEVICE_USER""@""$IPADDR" "$@"
+  fi
+  set +x
+}
+
+# to enable later: x forwarded shell
+shellx() {
+  set -x
+  if [ $HAS_ESCAPIFY -eq 0 ]; then # has escapify
+    ssh -Y -p"$LOCALPORT" "$DEVICE_USER""@""$IPADDR" "$(escapify "$@")"
+  else
+    ssh -Y -p"$LOCALPORT" "$DEVICE_USER""@""$IPADDR" "$@"
+  fi
+  set +x
+}
+
+# to enable later: shell w/ forced pseudoterminal allocation for curses programs and such
+shellpt() {
+  set -x
+  if [ $HAS_ESCAPIFY -eq 0 ]; then # has escapify
+    ssh -t -p"$LOCALPORT" "$DEVICE_USER""@""$IPADDR" "$(escapify "$@")"
+  else
+    ssh -t -p"$LOCALPORT" "$DEVICE_USER""@""$IPADDR" "$@"
+  fi
   set +x
 }
 
