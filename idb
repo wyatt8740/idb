@@ -27,6 +27,19 @@ IDEVICEINSTALLER="ideviceinstaller"
 # You should change this only if you have ideviceinstaller outside of your
 # $PATH or you have renamed the program.
 
+# idevicedebug name/path goes here.
+IDEVICEDEBUG="idevicedebug"
+# You should change this only if you have idevicedebug outside of your
+# $PATH or you have renamed the program.
+
+IDEVICEIMAGEMOUNTER="ideviceimagemounter"
+IDEVICESCREENSHOT="idevicescreenshot"
+
+
+# developer disk image can optionally go here. /dev/null = no image.
+# Can be overridden by idb.conf.
+DEVDISKIMG=/dev/null
+
 # Should IPA's be installed via SSH commands or via libimobiledevice?
 # In future: should we use SSH or libimobiledevice functions to administer
 # your device, if both methods are available?
@@ -58,6 +71,12 @@ IPADDR="127.0.0.1" # Don't change unless you plan to use this for wireless ssh.
 UDID='' # If empty, the script chooses the first UDID enumerated later on.
 
 ### SCRIPT BODY STARTS HERE ###
+# Check if my 'escapify' tool is built (lets one not have to double-escape
+# things with spaces and such for them to work in ssh commands)
+type escapify
+HAS_ESCAPIFY=$?
+export HAS_ESCAPIFY
+
 # remove grep aliases as to avoid color highlighting potential issues
 # don't show any error messages
 # (used for kill-server)
@@ -74,12 +93,15 @@ confLoad() {
   if [ -e "$HOME"'/.config/idb.conf' ]; then # if idb.conf exists
     # search for given UDID.
     # last instance supersedes previous ones (but you should not have multiple)
+    # !!Spaces might cause issues with this implementation!!
+    # (they are okay in comments only.)
     CONFLINE="$(grep '^'"$1"':' "$CONFFILE"|tail -n 1|sed 's/:/\t/g')"
     if [ -n "$CONFLINE" ]; then # if conf line is not empty (was found)
       REMOTEPORT="$(getCol 2 "$CONFLINE")"
       LOCALPORT="$(getCol 3 "$CONFLINE")"
       IPADDR="$(getCol 4 "$CONFLINE")"
       SSH_PREFERRED="$(getCol 5 "$CONFLINE")"
+      DEVDISKIMG="$(getCol 6 "$CONFLINE")"
     fi # /if conf line was found
   fi # /if idb.conf exists
   # do nothing if no match was found or file doesn't exist (continue on)
@@ -99,6 +121,7 @@ fi
 # said file exists
 confLoad "$UDID"
 
+
 startRelay() {
   # hide iproxy output. Look here if you can't make it work and remove the
   # pipe to see the diagnostics.
@@ -113,7 +136,12 @@ listDevices() {
   echo "Listing all iDevice UDID's."
   SPACING=18
   fetch(){
-    # ensure even spacing for each column
+    # Ensure even spacing for each column.
+    # This can likely be optimized massively.
+    # One simple thing would be replacing [ ] with [[ ]], but that's not
+    # in POSIX so you'd have to change this script to be using bash/ksh or
+    # something. If using ksh, $(( )) for math instead of 'expr' would also
+    # help a lot.
     printf '  '"$2"':'
     LEN=$( expr "$SPACING" '-' "$( printf "$2" | wc -c )" )
     I=0
@@ -124,7 +152,12 @@ listDevices() {
     ideviceinfo -u "$1" -k "$2"
   }
   
-  idevice_id -l | while read UUID; do
+  idevice_id -l | while read UUID; do # get info about each UUID's properties.
+    # Slow because it ends up having to call ideviceinfo once for each field.
+    # Saving the output of a single run to a temporary file and reading that
+    # would likely be much more performant.
+    # Unfortunately, mktemp isn't a POSIX command though and I haven't felt
+    # up to rolling my own just yet.
     idevicename -u "$UUID" | tr '\n' ':' | sed 's/:$/:\n/'
     printf "  UUID:              ""$UUID"'\n'
     fetch "$UUID" "ProductType"
@@ -134,7 +167,11 @@ listDevices() {
 }
 
 push() {
-  scp -P"$LOCALPORT" "$1" "$DEVICE_USER""@""$IPADDR"":""$2"
+  if [ $HAS_ESCAPIFY -eq 0 ]; then
+    scp -P"$LOCALPORT" "$1" "$DEVICE_USER""@""$IPADDR"":""$(escapify "$2")"
+  else
+    scp -P"$LOCALPORT" "$1" "$DEVICE_USER""@""$IPADDR"":""$2"
+  fi
 }
 
 pull() {
@@ -145,7 +182,14 @@ pull() {
   else
     DEST="$2"
   fi
-  scp -P"$LOCALPORT" "$DEVICE_USER""@""$IPADDR"":""$1" "$DEST"
+  # check if we have my 'escapify' program. If so, idb push/pull won't require
+  # additional escaping like scp usually does (it will work more as expected).
+  if [ $HAS_ESCAPIFY -eq 0 ]; then # has escapify
+    scp -P"$LOCALPORT" "$DEVICE_USER""@""$IPADDR"":""$(escapify "$1")" "$DEST"
+  else
+    # will neex extra escaping for spaces and such.
+    scp -P"$LOCALPORT" "$DEVICE_USER""@""$IPADDR"":""$1" "$DEST"
+  fi
 }
 
 shell() {
@@ -235,6 +279,37 @@ listPackages() {
   else
     "$IDEVICEINSTALLER" -u "$UDID" -l -o "$MODE"
   fi
+}
+
+mountimg() {
+  # if not already mounted, try to mount
+  "$IDEVICEIMAGEMOUNTER" -u "$UDID" -l | grep ImagePresent | grep -q false
+  if [ "$?" -eq 0 ]; then
+    if [ -n "$DEVDISKIMG" ]; then
+      "$IDEVICEIMAGEMOUNTER" -u "$UDID" "$DEVDISKIMG" "$DEVDISKIMG"'.signature'
+    fi
+  fi
+}
+
+debug() { # uses idevicedebug
+  # idevicedebug [OPTIONS] COMMAND
+  # command:
+  #  run BUNDLEID [ARGS...] run app BUNDLEID with optional ARGS on the device.
+  # options:
+  # -e, --env NAME=VALUE  set environment variable NAME to VALUE
+  # -d, --debug           enable communication debugging
+  mountimg
+  "$IDEVICEDEBUG" -u "$UDID" run "$@"
+}
+
+screenshot() {
+  mountimg
+  # outputs a tiff image
+  "$IDEVICESCREENSHOT" -u "$UDID" "$@"
+}
+  
+logcat() { # alias for debug
+  debug "$@"
 }
 
 # Printed when no command is given as a memory jogger.
@@ -360,6 +435,18 @@ elif [ "$1" = "list" ]; then
 # devices
 elif [ "$1" = "devices" ]; then
   listDevices
+# debug
+# also aliased as 'logcat'
+elif [ "$1" = "debug" ]; then
+  shift
+  debug "$@"
+elif [ "$1" = "logcat" ]; then
+  shift
+  debug "$@"
+# screenshot
+elif [ "$1" = "screenshot" ]; then
+  shift
+  screenshot "$@"
 # kill-server
 elif [ "$1" = "kill-server" ]; then
   killServer

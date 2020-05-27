@@ -7,10 +7,10 @@ Use `idb -u UDID [command]` to try it!
 
 #### History
 
-As an Android developer with an old jailbroken iPhone 4S I toy with
-occasionally, I was getting annoyed with typing in `ssh`/`scp` commands
-constantly to make my device do things, so I decided to write a script for
-it.
+As an Android developer with an old jailbroken iPhone 4S (and others) that I
+toy with occasionally, I was getting annoyed with typing in `ssh`/`scp`
+commands constantly to make my device do things, so I decided to write a
+script for it.
 
 ## Usage:
 ````
