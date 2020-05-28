@@ -7,10 +7,15 @@ int main(int argc, char **argv)
   int i=0;
   int j=1;
 /*  if(argc >= 2)*/
-  if(argc < 2)
+/*  if(argc < 2)
   {
     fprintf(stderr,"Error: Exactly one argument should be given: a string to shell-escape.\n");
     exit(1);
+    }*/
+  /* don't care if no args passed, should just return emptiness. */
+  if(argc < 2)
+  {
+    return 0;
   }
   while(j<argc)
   {
@@ -48,8 +53,10 @@ int main(int argc, char **argv)
       }
       i++;
     }
-    putchar(' ');
     j++;
+    if(j<argc) {
+      putchar(' ');
+    }
     i=0;
   }
   /* newline at end */
