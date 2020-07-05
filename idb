@@ -167,7 +167,7 @@ listDevices() {
 }
 
 push() {
-  if [ $HAS_ESCAPIFY -eq 0 ]; then
+  if [ $HAS_ESCAPIFY -eq 0 ] && [ -z $NO_ESCAPIFY ]; then
     scp -P"$LOCALPORT" "$1" "$DEVICE_USER""@""$IPADDR"":""$(escapify "$2")"
   else
     scp -P"$LOCALPORT" "$1" "$DEVICE_USER""@""$IPADDR"":""$2"
@@ -184,7 +184,8 @@ pull() {
   fi
   # check if we have my 'escapify' program. If so, idb push/pull won't require
   # additional escaping like scp usually does (it will work more as expected).
-  if [ $HAS_ESCAPIFY -eq 0 ]; then # has escapify
+  # NO_ESCAPIFY can be set to non-empty to force idb to not use it.
+  if [ $HAS_ESCAPIFY -eq 0 ] && [ -z $NO_ESCAPIFY ]; then # has escapify
     scp -P"$LOCALPORT" "$DEVICE_USER""@""$IPADDR"":""$(escapify "$1")" "$DEST"
   else
     # will neex extra escaping for spaces and such.
@@ -192,36 +193,43 @@ pull() {
   fi
 }
 
+# uses forced pseudoterminal allocation by default (-t)
 shell() {
-  set -x
-  if [ $HAS_ESCAPIFY -eq 0 ]; then # has escapify
-    ssh -p"$LOCALPORT" "$DEVICE_USER""@""$IPADDR" "$(escapify "$@")"
+  if [ $HAS_ESCAPIFY -eq 0 ] && [ -z $NO_ESCAPIFY ]; then # has escapify
+    set -x
+    ssh -t -p"$LOCALPORT" "$DEVICE_USER""@""$IPADDR" "$(escapify "$@")"
+    set +x
   else
-    ssh -p"$LOCALPORT" "$DEVICE_USER""@""$IPADDR" "$@"
+    set -x
+    ssh -t -p"$LOCALPORT" "$DEVICE_USER""@""$IPADDR" "$@"
+    set +x
   fi
-  set +x
 }
 
 # to enable later: x forwarded shell
 shellx() {
-  set -x
-  if [ $HAS_ESCAPIFY -eq 0 ]; then # has escapify
+  if [ $HAS_ESCAPIFY -eq 0 ] && [ -z $NO_ESCAPIFY ]; then # has escapify
+    set -x
     ssh -Y -p"$LOCALPORT" "$DEVICE_USER""@""$IPADDR" "$(escapify "$@")"
+    set +x
   else
+    set -x
     ssh -Y -p"$LOCALPORT" "$DEVICE_USER""@""$IPADDR" "$@"
+    set +x
   fi
-  set +x
 }
 
-# to enable later: shell w/ forced pseudoterminal allocation for curses programs and such
-shellpt() {
-  set -x
-  if [ $HAS_ESCAPIFY -eq 0 ]; then # has escapify
-    ssh -t -p"$LOCALPORT" "$DEVICE_USER""@""$IPADDR" "$(escapify "$@")"
+# to enable later: shell w/o forced pseudoterminal allocation
+shellnt() {
+  if [ $HAS_ESCAPIFY -eq 0 ] && [ -z $NO_ESCAPIFY ]; then # has escapify
+    set -x
+    ssh -p"$LOCALPORT" "$DEVICE_USER""@""$IPADDR" "$(escapify "$@")"
+    set +x
   else
-    ssh -t -p"$LOCALPORT" "$DEVICE_USER""@""$IPADDR" "$@"
+    set -x
+    ssh -p"$LOCALPORT" "$DEVICE_USER""@""$IPADDR" "$@"
+    set +x
   fi
-  set +x
 }
 
 killServer() {
@@ -418,85 +426,86 @@ usageHelp() {
   echo "Open this program in a text editor for more documentation."
 }
 
-# push
-if [ "$1" = "push" ]; then
-  startRelay
-  shift 1 # strip first argument (i.e., "push"), leaving only remaining args
-  push "$1" "$2"
-# pull
-elif [ "$1" = "pull" ]; then
-  startRelay
-  shift 1
-  pull "$1" "$2"
-# shell
-elif [ "$1" = "shell" ]; then
-  startRelay
-  shift 1
-  shell "$@"
-elif [ "$1" = "forward" ]; then
-  shift 1
-  forward "$@"
-# install
-elif [ "$1" = "install" ]; then
-  if [ "$SSH_PREFERRED" -ne 0 ]; then
+case "$1" in
+  # push
+  "push")
     startRelay
-  fi
-  shift 1
-  install "$1"
-# uninstall (remove)
-elif [ "$1" = "uninstall" ]; then
-  shift 1
-  remove "$1"
-# remove
-elif [ "$1" = "remove" ]; then
-  shift 1
-  remove "$1"
-# list-packages
-elif [ "$1" = "list-packages" ]; then
-  shift 1
-  listPackages "$@"
-# list
-elif [ "$1" = "list" ]; then
-  listDevices
-# devices
-elif [ "$1" = "devices" ]; then
-  listDevices
-# debug
-# also aliased as 'logcat'
-elif [ "$1" = "debug" ]; then
-  shift
-  debug "$@"
-elif [ "$1" = "logcat" ]; then
-  shift
-  debug "$@"
-# screenshot
-elif [ "$1" = "screenshot" ]; then
-  shift
-  screenshot "$@"
-# kill-server
-elif [ "$1" = "kill-server" ]; then
-  killServer
-# help
-elif [ "$1" = "help" ]; then
-# FIXME: probably could just put all this in the catch-all.
-# Unless someone knows a good reason I shouldn't.
-  usageHelp
-elif [ "$1" = "--help" ]; then
-  usageHelp
-elif [ "$1" = "-help" ]; then
-  usageHelp
-else
-  if [ "$#" -gt 0 ]; then # If we were given a command, but it was incorrect
-    # The fallback case should dump the help text to stderr rather than stdout.
-    echo "`basename "$0"`"": Error: '""$1""' is not a valid command." 1>&2
-    echo "Please note that not all 'adb'commands have exact analogues in this" 1>&2
-    echo "script." 1>&2
-  else
-    echo "`basename "$0"`"": Error: No command given." 1>&2
-    usageHelpBrief 1>&2
-  fi
-fi
-
+    shift 1 # strip first argument (i.e., "push"), leaving only remaining args
+    push "$1" "$2"
+    ;;
+  # pull
+  "pull")
+    startRelay
+    shift 1
+    pull "$1" "$2"
+    ;;
+  # shell with forced pseudoterminal allocation (works for ncurses programs)
+  "shell")
+    startRelay
+    shift 1
+    shell "$@"
+    ;;
+  # shell without pseudoterminal allocation
+  "shellnt")
+    startRelay
+    shift 1
+    shellnt "$@"
+    ;;
+  "forward")
+    shift 1
+    forward "$@"
+    ;;
+  "install")
+    if [ "$SSH_PREFERRED" -ne 0 ]; then
+      startRelay
+    fi
+    shift 1
+    install "$1"
+    ;;
+  # uninstall (remove)
+  "uninstall"|"remove")
+    shift 1
+    remove "$1"
+    ;;
+  # list-packages
+  "list-packages")
+    shift 1
+    listPackages "$@"
+    ;;
+  # list (devices)
+  "list"|"devices")
+    listDevices
+    ;;
+  # debug (logcat)
+  "debug"|"logcat")
+    shift
+    debug "$@"
+    ;;
+  # screenshot
+  "screenshot")
+    shift
+    screenshot "$@"
+    ;;
+  # kill-server
+  "kill-server")
+    killServer
+    ;;
+  # help
+  "help"|"-help"|"--help"|"-h")
+    usageHelp
+    ;;
+  *)
+    if [ "$#" -gt 0 ]; then # If we were given a command, but it was incorrect
+      # The fallback case should dump the help text to stderr rather than stdout.
+      echo "`basename "$0"`"": Error: '""$1""' is not a valid command." 1>&2
+      echo "Please note that not all 'adb'commands have exact analogues in this" 1>&2
+      echo "script." 1>&2
+    else
+      echo "`basename "$0"`"": Error: No command given." 1>&2
+      usageHelpBrief 1>&2
+    fi
+    ;;
+esac
 # clean-up
 kill "$IPROXYPID" 2>/dev/null # not all commands need to use iproxy, but for those that do we need to make sure it's closed.
 true #return 0
