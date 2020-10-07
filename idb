@@ -125,7 +125,9 @@ confLoad "$UDID"
 startRelay() {
   # hide iproxy output. Look here if you can't make it work and remove the
   # pipe to see the diagnostics.
+  set -x
   "$IPROXY_PROG" "$LOCALPORT" "$REMOTEPORT" "$UDID" > /dev/null 2>&1 &
+  set +x
   IPROXYPID="$!"
 }
 
@@ -506,6 +508,7 @@ case "$1" in
     fi
     ;;
 esac
+
 # clean-up
 kill "$IPROXYPID" 2>/dev/null # not all commands need to use iproxy, but for those that do we need to make sure it's closed.
 true #return 0
