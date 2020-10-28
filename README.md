@@ -93,6 +93,17 @@ your own `iproxy-quiet`, if you choose. Apply the patch with either
 `git apply iproxy-quiet.patch` or `patch -p1 < iproxy-quiet.patch` from the
 libusbmuxd source root.
 
+  * There's also a soft (optional) dependency on 'escapify,' a tiny C program
+I wrote which I have included in this repository.  It's something I might be
+able to replace with native shell stuff some day, but for me it was easier to
+write in C. Basically, it just makes escaping strings with things like spaces
+more intuitive and consistent by formatting them so programs like `scp` will
+accept them. If you don't use it, you may have to add some backslashes to your
+strings with spaces in them for things like `push` and `pull` to work as
+intended. Compile it with something like `cc -o escapify escapify.c`, and put
+the binary in a directory that's in your PATH variable. If available, the
+script will automatically utilize it.
+
 ### On the iDevice:
   * The device has to be connected via USB and have sshd listening on the port
 defined in the script as REMOTEPORT. Due to the sshd requirement, the device
