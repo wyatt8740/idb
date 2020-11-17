@@ -1,5 +1,5 @@
-CC=gcc
-CFLAGS=-g -Wall
+CC=cc
+CFLAGS= #-g -Wall
 LDFLAGS=
 
 .PHONY: all
@@ -7,7 +7,7 @@ LDFLAGS=
 all: escapify
 
 escapify: escapify.c
-	$(CC) -Wall -o $@ $^ $(CFLAGS) $(LDFLAGS)
+	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
 .PHONY: clean
 

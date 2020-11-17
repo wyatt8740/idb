@@ -100,9 +100,9 @@ write in C. Basically, it just makes escaping strings with things like spaces
 more intuitive and consistent by formatting them so programs like `scp` will
 accept them. If you don't use it, you may have to add some backslashes to your
 strings with spaces in them for things like `push` and `pull` to work as
-intended. Compile it with something like `cc -o escapify escapify.c`, and put
-the binary in a directory that's in your PATH variable. If available, the
-script will automatically utilize it.
+intended. Compile it with the makefile, or run a command similar to
+`cc -o escapify escapify.c`, and then put the binary in a directory that's in
+your PATH variable. If available, the script will automatically utilize it.
 
 ### On the iDevice:
   * The device has to be connected via USB and have sshd listening on the port
