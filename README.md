@@ -115,8 +115,9 @@ A couple of commands may work without SSH, such as `install`.
 
   * Note also that you can get openssh either from Saurik's repository
 (available by default on basically any jailbroken iDevice), or from other
-sources like ios-webstack (see http://ios-webstack.tk ). ios-webstack has
-a newer version of OpenSSH than Saurik's repository does as of January 2018.
+sources like ios-webstack ~~(see http://ios-webstack.tk )~~ (repo is dead; try
+https://cydia.akemi.ai/webstack/ instead). ios-webstack has a newer version of
+OpenSSH than Saurik's repository does as of January 2018.
 
   * This script can probably be easily adapted for wireless transfers by
 commenting out the iproxy stuff and changing the IP address/LOCALPORT to
