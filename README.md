@@ -2,6 +2,10 @@
 An emulation of a handful of useful adb commands I use for Android devices,
 adapted for jailbroken iOS devices connected via USB.
 
+It currently has been tested on iDevices ranging from iOS 4 to iOS 10, but it
+should work on 2.x up through whatever the most recent that can run an SSH
+daemon is.
+
 Now (as of early 2020) supports multiple iOS devices connected simultaneously!
 Use `idb -u UDID [command]` to try it!
 
