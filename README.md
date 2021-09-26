@@ -16,6 +16,16 @@ toy with occasionally, I was getting annoyed with typing in `ssh`/`scp`
 commands constantly to make my device do things, so I decided to write a
 script for it.
 
+By the way, I had absolutely no idea Facebook had an identically named project.
+
+I wholly expect theirs is far more capable, at least on Mac OS machines, but I
+like mine and I will continue using it.
+
+Due to being a POSIX shell script, my version is quite flexible, and (I hope)
+rather easy to pick up and hack on. I have commented the script heavily, in
+the hopes that it should even be approachable for someone with next to no shell
+scripting experience for tweaking.
+
 ## Usage:
 
 Note that this is currently slightly out of date; there are more options
@@ -176,3 +186,38 @@ an example of how it works. Put it in `~/.config/idb.conf`.
 Check that the variable REMOTEPORT is set to the port that the idevice is
 listening for SSH connections on it. Also make sure `usbmuxd` is running and
 has permissions to access your device (might require a udev rule or similar.)
+
+### Notes/Miscellania
+
+This script currently has several features that aren't advertised above in this
+readme, with the justification that they are sort of hard to use, or hacks
+that work well enough for me but which are sort of silly to expect others to
+pick up easily. I'll briefly list a few of them here.
+
+If you want to learn more about one of these features, read the shell script -
+and, if you have questions, contact me. You can either file an issue or send
+an email; both are fine. I'll probably respond more quickly to an issue than
+a plain email, though.
+
+* `idb.conf`: a file containing a colon-separated list of values. You can use
+this if you have multiple iDevices attached at once, to differentiate them when
+using SSH with `iproxy`. Each device must use iproxy listening on a separate
+port on the host, so this file lets you assign device UUID's to addresses.
+
+  * This could also be used to allow wireless device access - at least for SSH
+  based functionality. The example idb.conf file in this repository tries to
+  illustrate the syntax. But it's quite hacky.
+
+* Screenshots: this functionality requires mounting a developer disk image on
+the iDevice in question. Since different iOS versions have different
+developer disk images, there's no easy way I could think of to make a generic
+function for it in the script. So you can provide a path to an appropriate
+developer disk image in `idb.conf` for your given UUID.
+
+* debug: wrapper for `idevicedebug`
+I just haven't gotten around to documenting this properly yet. Check the
+comments in the script for more.
+
+I'd like to implement iFUSE-based file transfers, too - that way, idb could be
+used to push files into application directories just like iTunes can. This is
+currently not implemented.
