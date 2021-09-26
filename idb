@@ -64,8 +64,9 @@ SSH_PREFERRED=0
 
 REMOTE_IPA_INSTALL_PROG="ipainstaller" # Program on the iDevice to install IPA's with.
 
-IPROXY_PROG="iproxy-quiet" # Change to 'iproxy' if you don't want to use my
-                               # patched version or haven't renamed it.
+IPROXY_PROG="iproxy"
+#IPROXY_PROG="iproxy-quiet" # Change to 'iproxy' if you don't want to use my
+                            # patched version or haven't renamed it.
 IPADDR="127.0.0.1" # Don't change unless you plan to use this for wireless ssh.
 
 UDID='' # If empty, the script chooses the first UDID enumerated later on.
