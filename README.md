@@ -17,6 +17,13 @@ commands constantly to make my device do things, so I decided to write a
 script for it.
 
 ## Usage:
+
+Note that this is currently slightly out of date; there are more options
+available than are documented. For the moment, you can search the shell script
+for it. I hope to have time to clean this document up in the future and add the
+functions to the help text, but some of them need a little polishing before
+I'll feel like they're airworthy.
+
 ````
 idb [-u <UDID>] command [options]
     -u <UDID> can optionally be placed before most commands to make them operate
