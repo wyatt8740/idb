@@ -87,8 +87,11 @@ Whatever the case, if you compile `iproxy`, put the binary in a directory in
 your `$PATH` variable. I use `iproxy-quiet`, which is a custom version of it
 that I made that doesn't print information except on certain errors (i.e. it
 follows the Unix philosophy better). **You will have to edit the script to use
-regular `iproxy`** (just change the variable `IPROXY_PROG` near the top of the
-file).
+`iproxy-quiet`** (just change the variable `IPROXY_PROG` near the top of the
+file). You will also have to apply the patch to the libusbmuxd repository and
+build your own version of the tool if you take this route; I'd suggest you just
+use the one that they provide you and accept the extra prints. I only provide
+the patch because I personally use it.
 
   * `ideviceinstaller` for some functionality. From [this repository](https://github.com/libimobiledevice/ideviceinstaller) of libimobiledevice.
 
