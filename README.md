@@ -194,6 +194,10 @@ it and re-loading `usbmuxd`. I have to use `kill -9` or `pkill -9` to make it st
 typically. You can also run `usbmuxd -f` to get messages in the foreground for
 diagnostics.
 
+`idb list` runs the libimobiledevice `idevicels` command, if available, to
+enumerate devices. You could also try running `idevicels` manually to see what
+it has to say. Typically `usbmuxd -f` offers more useful information, though.
+
 ### Notes/Miscellania
 
 This script currently has several features that aren't advertised above in this
