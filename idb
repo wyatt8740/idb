@@ -32,6 +32,9 @@ IDEVICEDEBUG="idevicedebug"
 # You should change this only if you have idevicedebug outside of your
 # $PATH or you have renamed the program.
 
+# idevicesyslog name/path goes here.
+IDEVICESYSLOG="idevicesyslog"
+
 IDEVICEIMAGEMOUNTER="ideviceimagemounter"
 IDEVICESCREENSHOT="idevicescreenshot"
 
@@ -345,6 +348,10 @@ screenshot() {
   "$IDEVICESCREENSHOT" -u "$UDID" "$@"
 }
   
+syslog() {
+  "$IDEVICESYSLOG" -u "$UDID" "$@"
+}
+
 logcat() { # alias for debug
   debug "$@"
 }
@@ -488,6 +495,10 @@ case "$1" in
   "screenshot")
     shift
     screenshot "$@"
+    ;;
+  "syslog")
+    shift
+    syslog "$@"
     ;;
   # kill-server
   "kill-server")
