@@ -187,6 +187,13 @@ Check that the variable REMOTEPORT is set to the port that the idevice is
 listening for SSH connections on it. Also make sure `usbmuxd` is running and
 has permissions to access your device (might require a udev rule or similar.)
 
+  * `ERROR: Unable to retrieve device list!` (and similar problems finding a device):
+
+This means that `usbmuxd` is probably messing up on your computer. Try killing
+it and re-loading `usbmuxd`. I have to use `kill -9` or `pkill -9` to make it stop,
+typically. You can also run `usbmuxd -f` to get messages in the foreground for
+diagnostics.
+
 ### Notes/Miscellania
 
 This script currently has several features that aren't advertised above in this
