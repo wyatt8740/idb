@@ -352,8 +352,15 @@ syslog() {
   "$IDEVICESYSLOG" -u "$UDID" "$@"
 }
 
-logcat() { # alias for debug
-  debug "$@"
+logcat() { # alias for syslog (not 'debug')
+  syslog "$@"
+}
+
+experimentalFeatureMsg() {
+  echo "    - Experimental, on account of requiring pre-configuration in the sparsely"
+  echo "      documented and highly volatile 'idb.conf' file for mounting an iOS"
+  echo "      developer disk image. Some brief explanation is in the README as well as"
+  echo "      an example file."
 }
 
 # Printed when no command is given as a memory jogger.
@@ -395,6 +402,19 @@ usageHelp() {
   echo "    Forwards socket connections (currently only TCP ports are tested)."
   echo "    Unlike ADB, [local] and [remote] here should be integer values. That is,"
   echo "    'tcp:25565', the ADB syntax, would be just '25565' here."
+  echo "`basename "$0"`"" syslog [options]"
+  echo "    Display the iDevice's system message log. See the documentation for"
+  echo "    libimobiledevice's idevicesyslog for a full description of options."
+  echo "`basename "$0"`"" debug [application bundle identifier]"
+  echo "    [EXPERIMENTAL] View the diagnostics log of the specified application."
+  experimentalFeatureMsg
+  echo "`basename "$0"`"" screenshot [options] [output_filename]"
+  echo "    [EXPERIMENTAL] Take a screenshot of the display on a connected"
+  echo "    iDevice. 'output_filename' is optional; if not given a screenshot will be"
+  echo "    written to a file in 'screenshot-DATE' format."
+  echo "    Options are also, of course, optional. See the 'idevicescreenshot'"
+  echo "    documentation for a list of options."
+  experimentalFeatureMsg
   echo "`basename "$0"`"" install [target]"
   if [ "$SSH_PREFERRED" -ne 0 ]; then
     echo "    Installs the indicated target IPA on the iDevice using ""$REMOTE_IPA_INSTALL_PROG""."
